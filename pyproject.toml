@@ -42,4 +42,4 @@ addopts = "--cov --doctest-modules"
 include-package-data = true
 
 [tool.setuptools_scm]
-write_to = "src/nephila/_version.py"
+write_to = "src/sdsdsim/_version.py"

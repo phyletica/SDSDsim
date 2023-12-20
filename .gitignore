@@ -6,5 +6,5 @@ build
 setuptools*.egg
 setuptools*.zip
 .eggs
-src/nephila/_version.py
+src/sdsdsim/_version.py
 .coverage*

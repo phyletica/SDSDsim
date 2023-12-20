@@ -31,6 +31,8 @@ dev = [
 [project.scripts]
 
 [project.urls]
+Homepage = "https://github.com/phyletica/SDSDsim"
+Documentation = "https://github.com/phyletica/SDSDsim"
 
 [tool.coverage.run]
 source = ["src"]

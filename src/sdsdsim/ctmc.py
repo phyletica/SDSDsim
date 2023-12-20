@@ -10,8 +10,8 @@ from sdsdsim import rng_utils
 class CTMC(object):
     def __init__(
         self,
-        q = np.array([-1.0,   1.0],
-                     [ 1.0,  -1.0]]),
+        q = np.array([[-1.0,   1.0],
+                      [ 1.0,  -1.0]]),
     ):
         q = np.array(q)
         self.vet_q_matrix(q)

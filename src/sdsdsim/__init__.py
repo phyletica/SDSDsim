@@ -3,7 +3,7 @@
 import random
 import logging
 
-from nephila._version import __version__
+from sdsdsim._version import __version__
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 

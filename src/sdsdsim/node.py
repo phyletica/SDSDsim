@@ -26,8 +26,8 @@ class Node(object):
             self._parent._children.remove(self)
         self._parent = node
         if self._parent is not None:
-            if self. not in self._parent._children:
-                self._parent._children.appedn(self)
+            if self not in self._parent._children:
+                self._parent._children.append(self)
 
     parent = property(_get_parent, _set_parent)
 

@@ -1,0 +1,8 @@
+name: SDSD-doc
+dependencies:
+  - python=3
+  - sphinx
+  - recommonmark
+  - pip
+  - pip:
+      - sphinxcontrib-bibtex

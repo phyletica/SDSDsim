@@ -1,0 +1,17 @@
+name: SDSD-dev
+channels:
+  - conda-forge
+  - defaults
+  - bioconda
+dependencies:
+  # Dev-specific depencies
+  - pytest>=6.0
+  - pytest-cov>=3.0.0
+  - pylint>=2.14.0
+  - pytest-pylint
+  - flake8
+  - pytest-flake8
+  - mypy
+  - pytest-mypy
+  - jupyterlab
+  - bpython

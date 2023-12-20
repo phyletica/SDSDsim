@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=61.0", "setuptools_scm[toml]>=7.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "SDSDsim"
+authors = [
+    {name = "Jamie Oaks", email = "joaks1@gmail.com"},
+    ]
+description = "Simulating trees under a state-dependent birth-death process with shared and multifurcating divergences"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    ]
+dependencies = [
+    "numpy",
+    ]
+# Using setuptools_scm to write version to src/_version.py based on git data
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest >=6.0",
+    "pytest-cov >=3.0.0",
+    "pylint >=2.14.0",
+    ]
+
+[project.scripts]
+
+[project.urls]
+
+[tool.coverage.run]
+source = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "--cov --doctest-modules"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools_scm]
+write_to = "src/nephila/_version.py"

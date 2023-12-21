@@ -8,6 +8,11 @@ from sdsdsim import rng_utils
 
 
 class CTMC(object):
+    """
+    The methods for getting the steady-state probabilities borrow heavily from
+    this very nice blog post by Vince Knight:
+        https://vknight.org/blog/posts/continuous-time-markov-chains
+    """
     def __init__(
         self,
         q = np.array([[-1.0,   1.0],
@@ -34,7 +39,7 @@ class CTMC(object):
                 if rate < 0.0:
                     raise ValueError(f"Off-diagonal rate [{i}][{j}] is negative")
                 transition_rate += rate
-            if transition_rate <= 0.0:
+            if transition_rate < 0.0:
                 raise ValueError(f"Row {i} off-diagonal rates do not sum to be positive")
             row_sum = transition_rate + diag_rate
             if not math_utils.is_zero(row_sum):
@@ -44,6 +49,14 @@ class CTMC(object):
         return len(self.q)
 
     n_states = property(_get_n_states)
+
+    def get_rate_from(self, state):
+        row = self.q[state]
+        rate = 0.0
+        for r in row:
+            if r > 0.0:
+                rate += r
+        return rate
 
     def are_steady_state_probs(self, state_probs):
         return np.allclose((state_probs @ self.q), 0.0)

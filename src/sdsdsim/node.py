@@ -12,9 +12,6 @@ class Node(object):
         self.rootward_state = kwargs.pop("rootward_state", None)
         self.state_changes = []
         self.state_change_times = []
-        if "parent" in kwargs:
-            n = kwargs.pop("parent")
-            self.parent = n
         if kwargs:
             raise TypeError(f"Unsupported keyword arguments: {kwargs}")
 
@@ -45,3 +42,13 @@ class Node(object):
             raise ValueError("Child node to remove is not a child")
         node.parent = None
         self._children.remove(node)
+
+    def _get_tipward_state(self):
+        if not self.state_changes:
+            if not self.rootward_state:
+                raise Exception("Node has no state")
+            return self.rootward_state
+        else:
+            return self.state_changes[-1]
+
+    tipward_state = property(_get_tipward_state)

@@ -67,8 +67,10 @@ class Node(object):
 
     children = property(_get_children)
 
-    def is_root(self):
+    def _get_is_root(self):
         return self._parent is None
+
+    is_root = property(_get_is_root)
 
     def is_leaf(self):
         return len(self._children) == 0
@@ -77,7 +79,7 @@ class Node(object):
         return self._seed_time
 
     def _set_seed_time(self, time):
-        if not self.is_root():
+        if not self.is_root:
             raise Exception("seed time should only be set for a root node")
         self._seed_time = time
 

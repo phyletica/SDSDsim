@@ -35,6 +35,12 @@ class SDSDModel(object):
                 "states"
             )
         self.death_rates = death_rates
+        if len(burst_probs) != n_states:
+            raise ValueError(
+                f"Provided {len(burst_probs)} burst probs for {n_states} "
+                "states"
+            )
+        self.burst_probs = burst_probs
         if len(burst_furcation_poisson_means) != n_states:
             raise ValueError(
                 f"Provided {len(burst_furcation_poisson_means)} burst "
@@ -75,13 +81,13 @@ def sim_SDSD_tree(
     while True:
         final_extension = False
         if ((max_extant_leaves is not None)
-                and (len(extant_nodes) == max_extant_leaves)):
+                and (len(extant_nodes) >= max_extant_leaves)):
             final_extension = True
         elif ((max_extinct_leaves is not None)
-                and (len(extinct_nodes) == max_extinct_leaves)):
+                and (len(extinct_nodes) >= max_extinct_leaves)):
             final_extension = True
         elif ((max_total_leaves is not None)
-                and (len(extant_nodes) + len(extinct_nodes) == max_total_leaves)):
+                and (len(extant_nodes) + len(extinct_nodes) >= max_total_leaves)):
             final_extension = True
         lineage_total_rates = []
         lineage_rates = []

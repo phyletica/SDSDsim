@@ -60,6 +60,12 @@ class TestSimSDSDTree:
                 assert node.is_extinct == False
                 if node.is_leaf():
                     n_leaves += 1
+                if not node.is_root:
+                    assert is_zero(
+                            (node.parent.height - node.height) - (
+                             node.time - node.parent.time)
+                            )
+            assert n_leaves == max_extant_leaves
         mean_height = sum(root_heights) / n
         # Expected height is about 3.5
         assert is_zero(expected_height - mean_height, 0.05)
@@ -67,3 +73,44 @@ class TestSimSDSDTree:
         mean_length = sum(tree_lengths) / n
         # Expected length is 49
         assert is_zero(expected_length - mean_length, 0.5)
+
+    def test_basic_SDSD(self):
+        rng = random.Random(1)
+
+        sdsd_model = model.SDSDModel(
+                q = [
+                    [-1.0, 1.0],
+                    [1.0, -1.0],
+                ],
+                birth_rates = [1.0, 2.0],
+                death_rates = [0.5, 0.8],
+                burst_rate = 1.0,
+                burst_probs = [0.1, 0.5],
+                only_bifurcate = True,
+                )
+
+        n = 100
+        max_extant_leaves = 50
+        for i in range(n):
+            survived, root, burst_times = model.sim_SDSD_tree(
+                    rng_seed = rng.random(),
+                    sdsd_model = sdsd_model,
+                    max_extant_leaves = max_extant_leaves,
+                    max_extinct_leaves = None,
+                    max_total_leaves = None,
+                    max_time = None,
+                    )
+            n_leaves = 0
+            for node in root:
+                if node.is_leaf() and (not node.is_extinct):
+                    n_leaves += 1
+                if not node.is_root:
+                    assert is_zero(
+                            (node.parent.height - node.height) - (
+                             node.time - node.parent.time)
+                            )
+            if survived:
+                assert n_leaves >= max_extant_leaves
+            else:
+                assert n_leaves == 0
+            

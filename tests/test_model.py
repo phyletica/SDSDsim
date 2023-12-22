@@ -86,6 +86,8 @@ class TestSimSDSDTree:
                 death_rates = [0.5, 0.8],
                 burst_rate = 1.0,
                 burst_probs = [0.1, 0.5],
+                burst_furcation_poisson_means = [1.0, 2.0],
+                burst_furcation_poisson_shifts = [2, 2],
                 only_bifurcate = True,
                 )
 

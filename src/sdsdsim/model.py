@@ -3,9 +3,9 @@
 import random
 import numpy as np
 
-from sdsdsim import GLOBAL_RNG
-from sdsdsim import ctmc
-from sdsdsim import node
+from sdsdsim import GLOBAL_RNG, rng_utils
+from sdsdsim.ctmc import CTMC
+from sdsdsim.node import Node
 
 
 class SDSDModel(object):
@@ -21,8 +21,8 @@ class SDSDModel(object):
         burst_furcation_poisson_shifts = [2, 2],
         only_bifurcate = False,
     ):
-        self.ctmc = ctmc.CTMC(q)
-        n_states = len(self.q)
+        self.ctmc = CTMC(q)
+        n_states = self.ctmc.n_states
         if len(birth_rates) != n_states:
             raise ValueError(
                 f"Provided {len(birth_rates)} birth rates for {n_states} "
@@ -58,19 +58,19 @@ def sim_SDSD_tree(
     max_extinct_leaves = None,
     max_total_leaves = None,
     max_time = None,
-    time_zero_at_root = False,
 ):
     clock = 0.0
     rng = random.Random(rng_seed)
-    root_state = self.ctmc.draw_random_state(rng)
-    root = node.Node(
-        parent = None,
+    root_state = sdsd_model.ctmc.draw_random_state(rng)
+    root = Node(
         label = "root",
         rootward_state = root_state,
     )
+    root.seed_time = clock
     extant_nodes = [root]
     extinct_nodes = []
     burst_times = []
+    survived = True
 
     while True:
         final_extension = False
@@ -88,24 +88,27 @@ def sim_SDSD_tree(
         for node in extant_nodes:
             total_rate = 0.0
             current_state = node.leafward_state
-            birth_rate = self.birth_rates[current_state]
-            death_rate = self.death_rates[current_state]
-            transition_rate = self.ctmc.get_rate_from(current_state)
+            birth_rate = sdsd_model.birth_rates[current_state]
+            death_rate = sdsd_model.death_rates[current_state]
+            transition_rate = sdsd_model.ctmc.get_rate_from(current_state)
             lineage_total_rates.append(
                 birth_rate + death_rate + transition_rate
             )
             lineage_rates.append(
                 (birth_rate, death_rate, transition_rate)
             )
-        lineage_total_rates.append(self.burst_rate)
-        lineage_wait_times = [rng.expovariate(r) for r in lineage_total_rates]
+        lineage_total_rates.append(sdsd_model.burst_rate)
+        lineage_total_rates = np.array(lineage_total_rates)
+        positive_rate_indices = np.where(lineage_total_rates > 0.0)[0]
+        positive_rates = lineage_total_rates[positive_rate_indices]
+        lineage_wait_times = [rng.expovariate(r) for r in positive_rates]
         wait_time = np.min(lineage_wait_times)
-        if clock + wait_time > max_time:
+        if (max_time is not None) and (clock + wait_time > max_time):
             clock = max_time
             break
         clock += wait_time
-        lineage_index = lineage_wait_times[np.argmin(lineage_wait_times)]
-        if lineage_index == len(lineage_wait_times) - 1:
+        lineage_index = positive_rate_indices[np.argmin(lineage_wait_times)]
+        if lineage_index == len(lineage_total_rates) - 1:
             # This is a burst event
             if final_extension:
                 # We have the desired number of leaves and have extended the
@@ -114,16 +117,16 @@ def sim_SDSD_tree(
             burst_times.append(clock)
             for node in extant_nodes:
                 current_state = node.leafward_state
-                burst_p = self.burst_probs[current_state]
+                burst_p = sdsd_model.burst_probs[current_state]
                 u = rng.random()
                 if u > burst_p:
                     # This lineage does not diverge at this burst, so skip to
                     # the next
                     continue
                 n_children = 2
-                if not self.only_bifurcate:
-                    burst_mean = self.burst_furcation_poisson_means[current_state]
-                    burst_shift = self.burst_furcation_poisson_shifts[current_state]
+                if not sdsd_model.only_bifurcate:
+                    burst_mean = sdsd_model.burst_furcation_poisson_means[current_state]
+                    burst_shift = sdsd_model.burst_furcation_poisson_shifts[current_state]
                     pois_rv = rng_utils.poisson_rv(
                             mean = burst_mean,
                             rng = rng)
@@ -131,10 +134,10 @@ def sim_SDSD_tree(
                 assert n_children > 0
                 if n_children > 1:
                     node.time = clock
+                    node.is_burst_node = True
                     extant_nodes.remove(node)
                     for i in range(n_children):
-                        child = node.Node(
-                            parent = node,
+                        child = Node(
                             rootward_state = node.leafward_state,
                         )
                         node.add_child(child)
@@ -155,8 +158,7 @@ def sim_SDSD_tree(
                 node.time = clock
                 extant_nodes.remove(node)
                 for i in range(2):
-                    child = node.Node(
-                        parent = node,
+                    child = Node(
                         rootward_state = node.leafward_state,
                     )
                     node.add_child(child)
@@ -166,8 +168,12 @@ def sim_SDSD_tree(
                 # lineage-specific death event
                 node = extant_nodes[lineage_index]
                 node.time = clock
+                node.is_extinct = True
                 extant_nodes.remove(node)
                 extinct_nodes.append(node)
+                if len(extant_nodes) == 0:
+                    survived = False
+                    break
 
             elif event_index == 2:
                 # lineage-specific state transition
@@ -178,9 +184,16 @@ def sim_SDSD_tree(
 
             else:
                 raise ValueError(f"Unexpected event index: {event_index}")
-    if not time_zero_at_root:
-        # recurse through tree and reverse time
-        # and
-        # reverse time in burst_times
-        pass
-    return root, burst_times
+    # Populate node and state change heights
+    for node in root:
+        if node.time is None:
+            assert node.is_leaf()
+            assert not node.is_extinct
+            node.time = clock
+            node.height = 0.0
+        else:
+            node.height = clock - node.time
+        assert not node.state_change_heights
+        for state_change_t in node.state_change_times:
+            node.state_change_heights.append(clock - state_change_t)
+    return survived, root, burst_times

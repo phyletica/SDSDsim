@@ -58,6 +58,16 @@ class CTMC(object):
                 rate += r
         return rate
 
+    def draw_transition(self, state, rng = None):
+        if not rng:
+            rng = GLOBAL_RNG
+        row = self.q[state]
+        potential_states = np.where(row > 0.0)[0]
+        rates = row[potential_states]
+        state_index = rng_utils.get_weighted_index(rates, rng)
+        new_state = potential_states[state_index]
+        return new_state
+
     def are_steady_state_probs(self, state_probs):
         return np.allclose((state_probs @ self.q), 0.0)
 
@@ -68,6 +78,8 @@ class CTMC(object):
         return state_probs
     
     def draw_random_state(self, rng = None):
+        if not rng:
+            rng = GLOBAL_RNG
         steady_state_probs = self.get_steady_state_probs()
         state = rng_utils.get_prob_index(steady_state_probs, rng)
         return state

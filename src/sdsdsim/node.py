@@ -43,7 +43,7 @@ class Node(object):
         node.parent = None
         self._children.remove(node)
 
-    def _get_tipward_state(self):
+    def _get_leafward_state(self):
         if not self.state_changes:
             if not self.rootward_state:
                 raise Exception("Node has no state")
@@ -51,4 +51,8 @@ class Node(object):
         else:
             return self.state_changes[-1]
 
-    tipward_state = property(_get_tipward_state)
+    def transition_state(new_state, time):
+        self.state_changes.append(new_state)
+        self.state_change_times.append(time)
+
+    leafward_state = property(_get_leafward_state)

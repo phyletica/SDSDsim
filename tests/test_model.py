@@ -65,6 +65,13 @@ class TestSimSDSDTree:
                             (node.parent.height - node.height) - (
                              node.time - node.parent.time)
                             )
+                state_history = node.leafward_state_history
+                assert state_history[0][0] == node.rootward_state
+                assert state_history[-1][0] == node.leafward_state
+                duration = 0.0
+                for state, length in state_history:
+                    duration += length
+                assert is_zero(node.branch_length - duration)
             assert n_leaves == max_extant_leaves
         mean_height = sum(root_heights) / n
         # Expected height is about 3.5
@@ -111,6 +118,13 @@ class TestSimSDSDTree:
                             (node.parent.height - node.height) - (
                              node.time - node.parent.time)
                             )
+                state_history = node.leafward_state_history
+                assert state_history[0][0] == node.rootward_state
+                assert state_history[-1][0] == node.leafward_state
+                duration = 0.0
+                for state, length in state_history:
+                    duration += length
+                assert is_zero(node.branch_length - duration)
             if survived:
                 assert n_leaves >= max_extant_leaves
             else:

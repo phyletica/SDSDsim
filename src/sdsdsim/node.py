@@ -62,6 +62,28 @@ class Node(object):
         self.state_changes.append(transition)
         self.state_change_times.append(time)
 
+    def _get_leafward_state_history(self):
+        if self.rootward_state is None:
+            raise Exception("Node has no character-state history")
+        if len(self.state_changes) == 0:
+            return ((self.rootward_state, self.branch_length),)
+        history = []
+        current_time = None
+        if self.is_root:
+            current_time = self.seed_time
+        else:
+            current_time = self.parent.time
+        for i, (current_state, next_state) in enumerate(self.state_changes):
+            duration = self.state_change_times[i] - current_time
+            history.append((current_state, duration))
+            current_time = self.state_change_times[i]
+        assert next_state == self.leafward_state
+        duration = self.time - current_time
+        history.append((next_state, duration))
+        return tuple(history)
+
+    leafward_state_history = property(_get_leafward_state_history)
+
     def _get_children(self):
         return self._children
 
@@ -87,7 +109,9 @@ class Node(object):
 
     def _get_branch_length(self):
         if self._parent is None:
-            return 0.0
+            if self.seed_time is None:
+                return 0.0
+            return self.time - self.seed_time
         if (self.height is not None) and (self.parent.height is not None):
             return self.parent.height - self.height
         if (self.time is not None) and (self.parent.time is not None):

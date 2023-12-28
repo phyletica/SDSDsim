@@ -154,7 +154,12 @@ def sim_SDSD_tree(
                         node.add_child(child)
                         extant_nodes_to_add.append(child)
             for node in extant_nodes_to_remove:
+                # assert node in extant_nodes
                 extant_nodes.remove(node)
+                # assert node not in extant_nodes
+            # Debug sanity check
+            # for node in extant_nodes_to_add:
+            #     assert node not in extant_nodes
             extant_nodes.extend(extant_nodes_to_add)
         else:
             # This is a lineage-specific event

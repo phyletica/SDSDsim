@@ -58,7 +58,7 @@ class TestSimSDSDTree:
             for node in root:
                 assert node.is_burst_node == False
                 assert node.is_extinct == False
-                if node.is_leaf():
+                if node.is_leaf:
                     n_leaves += 1
                 if not node.is_root:
                     assert is_zero(
@@ -111,7 +111,7 @@ class TestSimSDSDTree:
                     )
             n_leaves = 0
             for node in root:
-                if node.is_leaf() and (not node.is_extinct):
+                if node.is_leaf and (not node.is_extinct):
                     n_leaves += 1
                 if not node.is_root:
                     assert is_zero(

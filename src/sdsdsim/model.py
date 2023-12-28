@@ -195,7 +195,7 @@ def sim_SDSD_tree(
     extinct_leaf_count = 0
     for node in root:
         if node.time is None:
-            assert node.is_leaf()
+            assert node.is_leaf
             assert not node.is_extinct
             node.time = clock
             node.height = 0.0

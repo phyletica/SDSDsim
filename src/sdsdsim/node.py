@@ -94,8 +94,10 @@ class Node(object):
 
     is_root = property(_get_is_root)
 
-    def is_leaf(self):
+    def _get_is_leaf(self):
         return len(self._children) == 0
+
+    is_leaf = property(_get_is_leaf)
 
     def _get_seed_time(self):
         return self._seed_time
@@ -155,7 +157,7 @@ class Node(object):
         Visits nodes leafward (each parent is visited before its children)
         """
         for n in self.leafward_iter():
-            if n.is_leaf():
+            if n.is_leaf:
                 continue
             yield n
 
@@ -184,7 +186,7 @@ class Node(object):
         Visits nodes rootward (each parent is visited after its children)
         """
         for n in self.rootward_iter():
-            if n.is_leaf():
+            if n.is_leaf:
                 continue
             yield n
 
@@ -193,6 +195,6 @@ class Node(object):
         Iterate over all leaves that descend from this node.
         """
         for n in self.rootward_iter():
-            if not n.is_leaf():
+            if not n.is_leaf:
                 continue
             yield n

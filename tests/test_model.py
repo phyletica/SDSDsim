@@ -95,7 +95,7 @@ class TestSimSDSDTree:
                 burst_probs = [0.1, 0.5],
                 burst_furcation_poisson_means = [1.0, 2.0],
                 burst_furcation_poisson_shifts = [2, 2],
-                only_bifurcate = True,
+                only_bifurcate = False,
                 )
 
         n = 100
@@ -129,4 +129,3 @@ class TestSimSDSDTree:
                 assert n_leaves >= max_extant_leaves
             else:
                 assert n_leaves == 0
-            

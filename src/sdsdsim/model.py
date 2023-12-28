@@ -121,6 +121,11 @@ def sim_SDSD_tree(
                 # tree to the next diversification event
                 break
             burst_times.append(clock)
+            # To avoid modifying `extant_nodes` while looping over it, we will
+            # keep track of which nodes need to be removed and added in these 2
+            # temporary lists:
+            extant_nodes_to_add = []
+            extant_nodes_to_remove = []
             for node in extant_nodes:
                 current_state = node.leafward_state
                 burst_p = sdsd_model.burst_probs[current_state]
@@ -141,13 +146,16 @@ def sim_SDSD_tree(
                 if n_children > 1:
                     node.time = clock
                     node.is_burst_node = True
-                    extant_nodes.remove(node)
+                    extant_nodes_to_remove.append(node)
                     for i in range(n_children):
                         child = Node(
                             rootward_state = node.leafward_state,
                         )
                         node.add_child(child)
-                        extant_nodes.append(child)
+                        extant_nodes_to_add.append(child)
+            for node in extant_nodes_to_remove:
+                extant_nodes.remove(node)
+            extant_nodes.extend(extant_nodes_to_add)
         else:
             # This is a lineage-specific event
             lin_rates= lineage_rates[lineage_index]

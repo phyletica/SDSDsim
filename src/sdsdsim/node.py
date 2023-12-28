@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+from io import StringIO
 
 class Node(object):
 
@@ -83,6 +84,17 @@ class Node(object):
         return tuple(history)
 
     leafward_state_history = property(_get_leafward_state_history)
+
+    def as_simmap_string(self, include_label = True):
+        s = StringIO()
+        if (self.label is not None) and include_label:
+            s.write(f"{self.label}")
+        s.write(":{")
+        s.write(
+            ":".join(f"{k},{d}" for k, d in self.leafward_state_history)
+        )
+        s.write("}")
+        return s.getvalue()
 
     def _get_children(self):
         return self._children
@@ -198,3 +210,26 @@ class Node(object):
             if not n.is_leaf:
                 continue
             yield n
+
+    def write_newick(self, out, include_root_annotations = True):
+        if self.is_leaf:
+            out.write(f"{self.as_simmap_string()}")
+        else:
+            out.write("(");
+            for i, child in enumerate(self._children):
+                if i > 0:
+                    out.write(",")
+                child.write_newick(out)
+            if self.is_root and (not include_root_annotations):
+                out.write(f")");
+            else:
+                out.write(f"){self.as_simmap_string()}");
+
+    def as_newick_string(self, include_root_annotations = True):
+        out = StringIO()
+        self.write_newick(out, include_root_annotations)
+        out.write(";")
+        return out.getvalue()
+
+    def __str__(self):
+        return self.as_newick_string()

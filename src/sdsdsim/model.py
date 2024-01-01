@@ -203,7 +203,7 @@ def sim_SDSD_tree(
 
             else:
                 raise ValueError(f"Unexpected event index: {event_index}")
-    # Populate node and state change heights and leaf labels
+    # Populate leaf times and labels
     extant_leaf_count = 0
     extinct_leaf_count = 0
     for node in root:
@@ -211,12 +211,6 @@ def sim_SDSD_tree(
             assert node.is_leaf
             assert not node.is_extinct
             node.time = clock
-            node.height = 0.0
-        else:
-            node.height = clock - node.time
-        assert not node.state_change_heights
-        for state_change_t in node.state_change_times:
-            node.state_change_heights.append(clock - state_change_t)
         if node.is_leaf:
             if node.is_extinct:
                 extinct_leaf_count += 1

@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 from io import StringIO
+import copy
 
 class Node(object):
 
@@ -10,11 +11,9 @@ class Node(object):
         self.label = kwargs.pop("label", None)
         self.time = kwargs.pop("time", None)
         self._seed_time = None
-        self.height = None
         self.rootward_state = kwargs.pop("rootward_state", None)
         self.state_changes = []
         self.state_change_times = []
-        self.state_change_heights = []
         self.is_extinct = False
         self.is_burst_node = False
         if kwargs:
@@ -45,7 +44,7 @@ class Node(object):
     def remove_child(self, node):
         if node not in self._children:
             raise ValueError("Child node to remove is not a child")
-        node.parent = None
+        node._parent = None
         self._children.remove(node)
 
     def _get_leafward_state(self):
@@ -126,13 +125,40 @@ class Node(object):
             if self.seed_time is None:
                 return 0.0
             return self.time - self.seed_time
-        if (self.height is not None) and (self.parent.height is not None):
-            return self.parent.height - self.height
         if (self.time is not None) and (self.parent.time is not None):
             return self.time - self.parent.time
         raise Exception("node or parent lacking info to calc branch length")
 
     branch_length = property(_get_branch_length)
+
+    def _get_root(self):
+        if self.is_root:
+            return self
+        for node in self.ancestor_iter():
+            pass
+        assert node.is_root
+        return node
+
+    root = property(_get_root)
+
+    def _get_max_time(self):
+        r = self.root
+        return max(leaf.time for leaf in r.leaf_iter())
+
+    max_time = property(_get_max_time)
+
+    def _get_height(self):
+        return self.max_time - self.time
+
+    height = property(_get_height)
+
+    def is_ancestor(self, node):
+        if self.is_root:
+            return False
+        for n in self.ancestor_iter():
+            if n is node:
+                return True
+        return False
 
     def _get_tree_length(self):
         l = 0.0
@@ -202,7 +228,7 @@ class Node(object):
                 continue
             yield n
 
-    def leaf_iter(self, filter_fn=None):
+    def leaf_iter(self):
         """
         Iterate over all leaves that descend from this node.
         """
@@ -211,9 +237,18 @@ class Node(object):
                 continue
             yield n
 
+    def ancestor_iter(self):
+        node = self
+        while node is not None:
+            node = node._parent
+            if node is not None:
+                yield node
+
     def write_newick(self, out, include_root_annotations = True):
+        if self.is_root and include_root_annotations:
+            out.write("(")
         if self.is_leaf:
-            out.write(f"{self.as_simmap_string()}")
+            out.write(f"{self.as_simmap_string(include_label = True)}")
         else:
             out.write("(");
             for i, child in enumerate(self._children):
@@ -223,7 +258,9 @@ class Node(object):
             if self.is_root and (not include_root_annotations):
                 out.write(f")");
             else:
-                out.write(f"){self.as_simmap_string()}");
+                out.write(f"){self.as_simmap_string(include_label = False)}");
+            if self.is_root and include_root_annotations:
+                out.write(f")");
 
     def as_newick_string(self, include_root_annotations = True):
         out = StringIO()
@@ -233,3 +270,50 @@ class Node(object):
 
     def __str__(self):
         return self.as_newick_string()
+
+    def _get_has_extant_leaves(self):
+        for node in self.leaf_iter():
+            if not node.is_extinct:
+                return True
+        return False
+
+    has_extant_leaves = property(_get_has_extant_leaves)
+
+    def _prune_first_extinct_clade(self, node):
+        for n in node.leafward_iter():
+            if not n.has_extant_leaves:
+                p = n.parent
+                p.remove_child(n)
+                return n
+        return None
+
+    def prune_extinct_leaves(self):
+        if not self.has_extant_leaves:
+            return None
+        new_root = copy.deepcopy(self)
+        pruned = True
+        while pruned is not None:
+            pruned = self._prune_first_extinct_clade(new_root)
+        return new_root.remove_unifurcations()
+
+    def remove_unifurcations(self):
+        new_root = copy.deepcopy(self)
+        uni_nodes = [n for n in new_root if len(n._children) == 1]
+        for node in uni_nodes:
+            child = node._children[0]
+            child.rootward_state = node.rootward_state
+            child.state_changes = node.state_changes + child.state_changes
+            child.state_change_times = node.state_change_times + child.state_change_times
+            if node.parent is not None:
+                p = node.parent
+                p._children.remove(node)
+                p.add_child(child)
+                node._parent = None
+                node._children = []
+            else:
+                assert node is new_root
+                child._seed_time = node._seed_time
+                child._parent = None
+                node._children = []
+                new_root = child
+        return new_root

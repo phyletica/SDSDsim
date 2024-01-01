@@ -4,8 +4,9 @@ channels:
   - defaults
   - bioconda
 dependencies:
-  - python=3.8
-  - pip
-  - setuptools>=61.0
+  - python>=3.8
+  - pip>=21.3
+  - setuptools>=64.0
   - setuptools_scm>=7.0.0
   - numpy
+  - yaml

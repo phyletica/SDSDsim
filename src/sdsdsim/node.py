@@ -113,6 +113,14 @@ class Node(object):
     def _get_seed_time(self):
         return self._seed_time
 
+    def _get_n_leaves(self):
+        n = 0
+        for l in self.leaf_iter():
+            n += 1
+        return n
+
+    number_of_leaves = property(_get_n_leaves)
+
     def _set_seed_time(self, time):
         if not self.is_root:
             raise Exception("seed time should only be set for a root node")

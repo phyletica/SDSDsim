@@ -129,3 +129,116 @@ class TestSimSDSDTree:
                 assert n_leaves >= max_extant_leaves
             else:
                 assert n_leaves == 0
+
+    def test_rates_SDSD(self):
+        rng = random.Random(1)
+
+        r_trans = 1.5
+        r_birth = 2.0
+        r_death = 1.0
+        r_burst = 1.2
+        sdsd_model = model.SDSDModel(
+                q = [
+                    [-r_trans, r_trans],
+                    [r_trans, -r_trans],
+                ],
+                birth_rates = [r_birth, r_birth],
+                death_rates = [r_death, r_death],
+                burst_rate = r_burst,
+                burst_probs = [0.5, 0.5],
+                burst_furcation_poisson_means = [1.0, 1.0],
+                burst_furcation_poisson_shifts = [2, 2],
+                only_bifurcate = False,
+                )
+
+        n = 200
+        max_extant_leaves = None
+        max_time = 2.0
+        n_bursts = 0
+        n_births_0 = 0
+        n_births_1 = 0
+        n_deaths_0 = 0
+        n_deaths_1 = 0
+        n_trans_01 = 0
+        n_trans_10 = 0
+        total_time = 0.0
+        total_tree_length = 0.0
+        for i in range(n):
+            survived, root, burst_times = model.sim_SDSD_tree(
+                    rng_seed = rng.random(),
+                    sdsd_model = sdsd_model,
+                    max_extant_leaves = max_extant_leaves,
+                    max_extinct_leaves = None,
+                    max_total_leaves = None,
+                    max_time = max_time,
+                    )
+            # print(root.number_of_leaves)
+            n_bursts += len(burst_times)
+            assert root.seed_time == 0.0
+            t = root.height + root.time
+            if survived:
+                assert is_zero(t - max_time)
+            else:
+                assert t < max_time
+            total_time += (t)
+            total_tree_length += (root.tree_length + root.time)
+            for node in root:
+                if node.is_extinct:
+                    if node.leafward_state == 0:
+                        n_deaths_0 += 1
+                    elif node.leafward_state == 1:
+                        n_deaths_1 += 1
+                    else:
+                        assert False == True
+                elif (not node.is_leaf) and (not node.is_burst_node):
+                    assert not node.is_extinct
+                    assert len(node.children) == 2
+                    if node.leafward_state == 0:
+                        n_births_0 += 1
+                    elif node.leafward_state == 1:
+                        n_births_1 += 1
+                    else:
+                        assert False == True
+                for trans in node.state_changes:
+                    if trans == (0, 1):
+                        n_trans_01 += 1
+                    elif trans == (1, 0):
+                        n_trans_10 += 1
+                    else:
+                        assert False == True
+        n_trans = n_trans_01 + n_trans_10
+        n_births = n_births_0 + n_births_1
+        n_deaths = n_deaths_0 + n_deaths_1
+        e_burst_rate = n_bursts / total_time
+        e_birth_rate = n_births / total_tree_length
+        e_death_rate = n_deaths / total_tree_length
+        e_trans_rate = n_trans / total_tree_length
+        eps = 0.1
+        assert is_zero(
+                (n_trans_10 / n_trans_01) - 1.0,
+                eps
+                )
+        assert is_zero(
+                (n_births_0 / n_births_1) - 1.0,
+                eps
+                )
+        assert is_zero(
+                (n_deaths_0 / n_deaths_1) - 1.0,
+                eps
+                )
+        assert is_zero(
+                e_trans_rate - r_trans,
+                eps
+                )
+        assert is_zero(
+                e_birth_rate - r_birth,
+                eps
+                )
+        assert is_zero(
+                e_death_rate - r_death,
+                eps
+                )
+        assert is_zero(
+                e_burst_rate - r_burst,
+                eps
+                )

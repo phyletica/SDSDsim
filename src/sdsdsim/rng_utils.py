@@ -52,3 +52,21 @@ def poisson_rv(mean, rng = None):
     if n > sys.maxsize:
         raise Exception("Poisson draw was larger than maxsize")
     return int(n)
+
+def get_safe_seed(rng):
+    """
+    Get a random seed (int) between 0 and 2^31, which is safe to write and read
+    across systems and is safe for seeding numpy (which must be between 0 and
+    2^32-1).
+
+    Parameters
+    ----------
+    rng : `random.Random` object
+        An instance of a `random.Random` object
+
+    Returns
+    -------
+    int
+        A random integer from the range 1 to 2^31-1 (inclusive)
+    """
+    return rng.randint(1, (2**31)-1)

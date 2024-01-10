@@ -29,6 +29,7 @@ dev = [
     ]
 
 [project.scripts]
+sim-SDSD-trees = "sdsdsim.cli.sim_SDSD_trees:main"
 
 [project.urls]
 Homepage = "https://github.com/phyletica/SDSDsim"

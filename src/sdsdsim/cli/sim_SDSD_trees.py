@@ -61,6 +61,8 @@ def parse_settings(settings_config):
         'keep_extinct_trees', False)
     settings['prune_extinct_leaves'] = settings_config.get(
         'prune_extinct_leaves', False)
+    settings['max_leaves_strict'] = settings_config.get(
+        'max_leaves_strict', False)
     stopping_conditions = settings_config.get('stopping_conditions', {})
     settings['stopping_conditions'] = parse_stopping_conditions(
         stopping_conditions)
@@ -114,6 +116,7 @@ def main():
 
     prune_extinct_leaves = cfg['settings']['prune_extinct_leaves']
     keep_extinct_trees = cfg['settings']['keep_extinct_trees']
+    max_leaves_strict = cfg['settings']['max_leaves_strict']
 
     data['model'] = cfg['model']
     data['settings'] = cfg['settings']
@@ -130,6 +133,33 @@ def main():
         )
         if (not survived) and (not keep_extinct_trees):
             continue
+        if max_leaves_strict:
+            mx = cfg['settings']['stopping_conditions']['max_total_leaves']
+            if (mx and (tree.number_of_leaves > mx)):
+                sys.stderr.write(
+                    f"max_total_leaves is {mx} and final shared event resulted "
+                    f"in {tree.number_of_leaves} leaves...\n"
+                    f"\tDiscarding this simulation!\n"
+                )
+                continue
+            mx = cfg['settings']['stopping_conditions']['max_extant_leaves']
+            if (mx and (tree.number_of_extant_leaves > mx)):
+                sys.stderr.write(
+                    f"max_extant_leaves is {mx} and final shared event resulted "
+                    f"in {tree.number_of_extant_leaves} leaves...\n"
+                    f"\tDiscarding this simulation!\n"
+                )
+                continue
+            mx = cfg['settings']['stopping_conditions']['max_extinct_leaves']
+            if (mx and (tree.number_of_extinct_leaves > mx)):
+                # This should never happen, but putting logic in place in case
+                # we ever decide to allow shared extinction events
+                sys.stderr.write(
+                    f"max_extinct_leaves is {mx} and final shared event resulted "
+                    f"in {tree.number_of_extinct_leaves} leaves...\n"
+                    f"\tDiscarding this simulation!\n"
+                )
+                continue
         if prune_extinct_leaves:
             tree = tree.prune_extinct_leaves()
         samples.append(

@@ -160,12 +160,21 @@ def main():
                     f"\tDiscarding this simulation!\n"
                 )
                 continue
+
         if prune_extinct_leaves:
             tree = tree.prune_extinct_leaves()
+
+        burst_times_with_nodes = set()
+        for node in tree.internal_leafward_iter():
+            if node.is_burst_node:
+                burst_times_with_nodes.add(node.time)
+        burst_times_with_nodes = sorted(burst_times_with_nodes)
+
         samples.append(
             {
                 'tree': tree.as_newick_string(),
                 'burst_times': [float(t) for t in burst_times],
+                'burst_times_with_nodes': [float(t) for t in burst_times_with_nodes],
             }
         )
 

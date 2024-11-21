@@ -43,7 +43,7 @@ plot_SDSD_tree = function(tree, burst_times, states, state_colors,
               x = c(time, time),
               y = y_lims,
               lty = "dashed",
-              lwd = 1.2,
+              lwd = 2.5,
               col = burst_line_color,
               )
     }
@@ -87,7 +87,7 @@ for (tree in sd_trees$trees) {
     if (x_max > 8) {
         x_ticks = seq(0, floor(x_max), by = 2)
     }
-    axis(1, cex.axis = 1.1, pos = -y_bump, at = x_ticks)
+    axis(1, cex.axis = 1.6, pos = -y_bump, at = x_ticks)
 }
 for (tree in bd_trees$trees) {
     t = read.simmap(text = tree$tree, format = "phylip", rev.order = F)
@@ -99,6 +99,6 @@ for (tree in bd_trees$trees) {
     if (x_max > 8) {
         x_ticks = seq(0, floor(x_max), by = 2)
     }
-    axis(1, cex.axis = 1.1, pos = -y_bump, at = x_ticks)
+    axis(1, cex.axis = 1.6, pos = -y_bump, at = x_ticks)
 }
 dev.off()

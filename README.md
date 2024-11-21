@@ -35,7 +35,7 @@ occur. There is only one `burst_rate` that is shared across all states.
 When a burst event occurs, each extant lineage at that time has the opportunity
 to diverge into 2 or more descendant lineages.
 
-There are two ways to control how "burstiness" of lineages of each character
+There are two ways to control the "burstiness" of lineages in each character
 state.
 
 ### Controlling state-dependent burst rates with `burst_probs`
@@ -104,7 +104,7 @@ nothing) when crossing a burst event; a Poisson distribution with a mean of 0.1
 and shifted to the right by 1, so the actual mean number of lineages will be
 1.1.
 Lineages in State A will, on average, trifurcate when crossing a burst event; a
-Poisson distribution with a mean of 2 and shifted to the right by 1 (an
+Poisson distribution with a mean of 2 and shifted to the right by 1 (a
 realized mean of 3).
 
 **NOTE:** If the `only_bifurcate` option is set to `True`, all burst

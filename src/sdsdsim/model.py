@@ -60,6 +60,7 @@ class SDSDModel(object):
 def sim_SDSD_tree(
     rng_seed,
     sdsd_model,
+    root_state = None,
     max_extant_leaves = 50,
     max_extinct_leaves = None,
     max_total_leaves = None,
@@ -67,7 +68,10 @@ def sim_SDSD_tree(
 ):
     clock = 0.0
     rng = random.Random(rng_seed)
-    root_state = sdsd_model.ctmc.draw_random_state(rng)
+    if (root_state is None) or (root_state < 0):
+        root_state = sdsd_model.ctmc.draw_random_state(rng)
+    if (root_state >= sdsd_model.ctmc.n_states) or (root_state < 0):
+        raise ValueError(f"Invalid root state: {root_state}")
     root = Node(
         label = "root",
         rootward_state = root_state,

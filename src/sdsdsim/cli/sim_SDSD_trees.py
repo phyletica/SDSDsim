@@ -66,6 +66,7 @@ def parse_settings(settings_config):
     stopping_conditions = settings_config.get('stopping_conditions', {})
     settings['stopping_conditions'] = parse_stopping_conditions(
         stopping_conditions)
+    settings['fix_root_state_to'] = settings_config.get('fix_root_state_to', None)
     for k in settings_config.keys():
         if k not in settings:
             sys.stderr.write(f"ERROR: Unrecognized settings field '{k}'\n")
@@ -129,6 +130,7 @@ def main():
         survived, tree, burst_times = sdsdsim.model.sim_SDSD_tree(
             rng_seed = rng.random(),
             sdsd_model = model,
+            root_state = cfg['settings']['fix_root_state_to'],
             **cfg['settings']['stopping_conditions']
         )
         if (not survived) and (not keep_extinct_trees):

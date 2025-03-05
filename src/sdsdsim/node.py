@@ -84,16 +84,23 @@ class Node(object):
 
     leafward_state_history = property(_get_leafward_state_history)
 
-    def as_simmap_string(self, include_label = True):
+    @staticmethod
+    def as_simmap_string(node, include_label = True):
         s = StringIO()
-        if (self.label is not None) and include_label:
-            s.write(f"{self.label}")
+        if (node.label is not None) and include_label:
+            s.write(f"{node.label}")
         s.write(":{")
         s.write(
-            ":".join(f"{k},{d}" for k, d in self.leafward_state_history)
+            ":".join(f"{k},{d}" for k, d in node.leafward_state_history)
         )
         s.write("}")
         return s.getvalue()
+
+    @staticmethod
+    def as_length_string(node, include_label = True):
+        if (node.label is not None) and include_label:
+            return f"{node.label}:{node.branch_length}"
+        return f":{node.branch_length}"
 
     def _get_children(self):
         return self._children
@@ -270,29 +277,69 @@ class Node(object):
             if node is not None:
                 yield node
 
-    def write_newick(self, out, include_root_annotations = True):
+    def _write_newick(self, out, include_root_annotations, branch_annot_func):
         if self.is_root and include_root_annotations:
             out.write("(")
         if self.is_leaf:
-            out.write(f"{self.as_simmap_string(include_label = True)}")
+            out.write(f"{branch_annot_func(self, include_label = True)}")
         else:
             out.write("(");
             for i, child in enumerate(self._children):
                 if i > 0:
                     out.write(",")
-                child.write_newick(out)
+                child._write_newick(
+                    out = out,
+                    include_root_annotations = include_root_annotations,
+                    branch_annot_func = branch_annot_func,
+                )
             if self.is_root and (not include_root_annotations):
                 out.write(f")");
             else:
-                out.write(f"){self.as_simmap_string(include_label = False)}");
+                out.write(f"){branch_annot_func(self, include_label = False)}");
             if self.is_root and include_root_annotations:
                 out.write(f")");
 
-    def as_newick_string(self, include_root_annotations = True):
+    def write_newick_simmap(self, out, include_root_annotations = True):
+        self._write_newick(
+            out = out,
+            include_root_annotations = include_root_annotations,
+            branch_annot_func = Node.as_simmap_string,
+        )
+
+    def write_newick_simple(self, out, include_root_annotations = True):
+        self._write_newick(
+            out = out,
+            include_root_annotations = include_root_annotations,
+            branch_annot_func = Node.as_length_string,
+        )
+
+    def write_newick(self, out, include_root_annotations = True):
+        self.write_newick_simmap(out, include_root_annotations)
+
+    def _as_newick_string(self, include_root_annotations, branch_annot_func):
         out = StringIO()
-        self.write_newick(out, include_root_annotations)
+        self._write_newick(
+            out = out,
+            include_root_annotations = include_root_annotations,
+            branch_annot_func = branch_annot_func,
+        )
         out.write(";")
         return out.getvalue()
+
+    def as_newick_simmap_string(self, include_root_annotations = True):
+        return self._as_newick_string(
+            include_root_annotations = include_root_annotations,
+            branch_annot_func = Node.as_simmap_string,
+        )
+
+    def as_newick_simple_string(self, include_root_annotations = True):
+        return self._as_newick_string(
+            include_root_annotations = include_root_annotations,
+            branch_annot_func = Node.as_length_string,
+        )
+
+    def as_newick_string(self, include_root_annotations = True):
+        return self.as_newick_simmap_string(include_root_annotations)
 
     def __str__(self):
         return self.as_newick_string()
